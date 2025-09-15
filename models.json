@@ -1,0 +1,71 @@
+{
+  "neurons": {
+    "HodgkinHuxleyModel": {
+      "short_name": "HH",
+      "description": "Classic Hodgkin-Huxley neuron model with voltage-gated sodium and potassium channels",
+      "header": "HodgkinHuxleyModel.h",
+      "variables": {
+        "v": "Membrane potential (mV)",
+        "h": "Sodium channel inactivation gating variable",
+        "m": "Sodium channel activation gating variable",
+        "n": "Potassium channel activation gating variable"
+      },
+      "parameters": {
+        "cm": "Membrane capacitance (\u00b5F/cm\u00b2)",
+        "vna": "Sodium reversal potential (mV)",
+        "vk": "Potassium reversal potential (mV)",
+        "vl": "Leak reversal potential (mV)",
+        "gna": "Maximum sodium conductance (mS/cm\u00b2)",
+        "gk": "Maximum potassium conductance (mS/cm\u00b2)",
+        "gl": "Leak conductance (mS/cm\u00b2)"
+      }
+    },
+    "HindmarshRoseModel": {
+      "short_name": "HR",
+      "description": "Hindmarsh-Rose neuron model - simplified model of neuronal activity",
+      "header": "HindmarshRoseModel.h",
+      "variables": {
+        "x": "Membrane potential variable",
+        "y": "Recovery variable",
+        "z": "Slow adaptation variable"
+      },
+      "parameters": {
+        "e": "External current parameter",
+        "mu": "Time scale parameter",
+        "S": "Scaling parameter"
+      }
+    }
+  },
+  "synapses": {
+    "ElectricalSynapsis": {
+      "short_name": "ESyn",
+      "description": "Electrical synaptic connection",
+      "header": "ElectricalSynapsis.h",
+      "template_params": ["TNode1", "TNode2"]
+    },
+    "DiffusionSynapsis": {
+      "short_name": "DSyn",
+      "description": "Diffusion-based synaptic connection", 
+      "header": "DiffusionSynapsis.h",
+      "template_params": ["TNode1", "TNode2", "TIntegrator", "precission"]
+    }
+  },
+  "integrators": {
+    "RungeKutta4": {
+      "short_name": "RK4",
+      "header": "RungeKutta4.h"
+    },
+    "RungeKutta6": {
+      "short_name": "RK6",
+      "header": "RungeKutta6.h"
+    }
+  },
+  "precisions": [
+    "float",
+    "double"
+  ],
+  "generation_config": {
+    "generate_individual_neurons": true,
+    "generate_synaptic_pairs": true
+  }
+}
