@@ -1,0 +1,10 @@
+# Include Neun C++ headers in source distributions
+recursive-include include/neun *.h *.hpp
+include models.json
+include generate_pybinds.py
+
+# Include top-level docs and config
+include README.md
+include pyproject.toml
+include CMakeLists.txt
+include LICENSE

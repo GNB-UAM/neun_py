@@ -1,7 +1,34 @@
 [build-system]
 requires = [
-    "setuptools>=42",
+    "setuptools>=61",  # PEP 621 metadata support
     "wheel",
     "pybind11>=2.6.0"
 ]
 build-backend = "setuptools.build_meta"
+
+# Project metadata
+[project]
+dynamic = [
+    "name",
+    "version",
+    "description",
+    "readme",
+    "authors",
+    "dependencies"
+]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: C++",
+]
+requires-python = ">=3.7"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/GNB-UAM/neun_py"
+Repository = "https://github.com/GNB-UAM/neun_py"
+Documentation = "https://github.com/GNB-UAM/neun_py#readme"
+
+[tool.setuptools.packages.find]
+where = ["src"]

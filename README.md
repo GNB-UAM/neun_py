@@ -25,42 +25,40 @@ Neun-py provides Python access to the high-performance C++ Neun neural simulatio
 
 ### Building from Source
 
-1. **Install Neun library system-wide** (if not already done):
+1. **Clone and build the Python bindings**:
 ```bash
-# From your Neun source directory
-cd /path/to/neun
-mkdir build && cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
-make -j$(nproc)
-sudo make install
-```
+git clone git@github.com/GNB-UAM/neun_py
+cd neun_py
+# Recommended: use Makefile
+make            # generates code (if needed) and installs in editable mode
 
-2. **Clone and build the Python bindings**:
-```bash
-git clone git@github.com/GNB-UAM/neun-py
-cd neun-py
-./build.sh
+# Or explicitly
+make codegen    # force-regenerate src/pybinds.cpp
+make develop    # pip install -e .
 ```
 
 3. **Optional dependencies for examples**:
 ```bash
-pip install neun-py[examples]  # Includes matplotlib and numpy
+pip install neun_py[examples]  # Includes matplotlib and numpy
 ```
 
-### Build Options
+### Make targets
 
 ```bash
-./build.sh                  # Normal build (smart regeneration)
-./build.sh --force          # Force complete rebuild
-./build.sh --clean          # Clean previous installation
-./build.sh --help           # Show all options
+make              # Default: codegen (if needed) + install editable
+make codegen      # Force regenerate src/pybinds.cpp
+make develop      # Install editable (-e .)
+make test         # Import module and print available types
+make sdist        # Build a source distribution
+make wheel        # Build a wheel (compiles extension)
+make dist         # Build both sdist and wheel
+make clean        # Remove build/ dist/ *.egg-info __pycache__ and generated src/pybinds.cpp
 ```
 
-The build script automatically:
-- Detects when C++ code needs regeneration
-- Finds system-wide Neun installation
-- Compiles and installs in development mode
-- Runs basic functionality tests
+The Makefile automatically:
+- Regenerates C++ bindings when models.json or generator changes
+- Installs in editable mode for fast iteration
+- Provides clean/test/dist helpers
 
 ## Usage
 
@@ -165,7 +163,7 @@ public:
 ### 3. Regenerate and Build
 
 ```bash
-./build.sh --force
+make codegen && make
 ```
 
 The new model will be automatically available as:
@@ -178,14 +176,14 @@ The new model will be automatically available as:
 neun_py/
 ├── models.json             # Model configuration file
 ├── generate_pybinds.py     # Automatic code generator
-├── build.sh                # Smart build system
+├── Makefile                # Build orchestration (codegen, install, test, clean)
 ├── setup.py                # Python packaging
 ├── src/                    # Generated C++ code
 │   └── pybinds.cpp        # Auto-generated bindings
 └── examples/               # Usage examples
-    ├── basic.py           # Single neuron simulation
-    ├── synapsis.py        # Coupled neurons
-    └── test_examples.py   # Test suite
+  ├── basic.py           # Single neuron simulation
+  ├── synapsis.py        # Coupled neurons
+  └── test_examples.py   # Test suite
 ```
 
 ## Build System
@@ -212,7 +210,7 @@ This saves significant compilation time during development.
 ```bash
 git clone [repository]
 cd neun_py
-./build.sh
+make
 ```
 Installs in editable mode with automatic path detection.
 
@@ -227,7 +225,7 @@ pip install neun-py[full]              # All optional dependencies
 If automatic detection fails, use:
 ```bash
 export NEUN_INCLUDE_DIR=/path/to/neun/include
-./build.sh
+make
 ```
 
 ## API Reference
@@ -272,7 +270,7 @@ The project uses **metaprogramming** to automatically generate Python bindings:
 
 1. **`models.json`** - Configuration defining available models
 2. **`generate_pybinds.py`** - Code generator script  
-3. **`build.sh`** - Smart build system
+3. **`Makefile`** - Smart build orchestration
 4. **`setup.py`** - Python packaging
 
 This approach ensures:
@@ -295,9 +293,5 @@ This approach ensures:
 
 1. Add your model to `models.json`
 2. Implement the C++ model following Neun conventions
-3. Test with `./build.sh --force`
+3. Test with `make codegen && make`
 4. Submit pull request with both JSON and header files
-
-## License
-
-Same as the Neun library - see LICENSE file.
