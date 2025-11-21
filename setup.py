@@ -130,8 +130,10 @@ setup(
     ],
     python_requires=">=3.7",
     extras_require={
+        "examples": [
+            "matplotlib>=3.0.0",
+        ],
         "full": [
-            "numpy>=1.20.0",
             "matplotlib>=3.0.0",
         ],
     },

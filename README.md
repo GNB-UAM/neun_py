@@ -1,297 +1,164 @@
 # Neun Python Bindings
 
-Python bindings for the [Neun](https://github.com/GNB-UAM/neun) neural simulation library, automatically generated using pybind11 and metaprogramming.
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://gnb-uam.github.io/neun_py/)
 
-## Overview
+Python bindings for the [Neun](https://github.com/GNB-UAM/neun) neural simulation library. High-performance computational neuroscience with an intuitive Python interface.
 
-Neun-py provides Python access to the high-performance C++ Neun neural simulation library. The bindings are automatically generated from a JSON configuration file, making it easy to add new neuron models and maintain consistency between C++ and Python interfaces.
+## Features
 
-**Key Features:**
-- **Automatic code generation** from JSON model specifications
-- **Type-safe bindings** with proper enum support
-- **Multiple precision types** (float, double) and integrators (RK4, RK6)
-- **Synaptic coupling** between different neuron types
-- **Header-only library** - no linking required
-- **Easy model addition** through JSON configuration
+- **Multiple neuron models** - Hodgkin-Huxley, Hindmarsh-Rose, and more  
+- **High performance** - C++ speed with Python convenience  
+- **Synaptic coupling** - Electrical and diffusion synapses  
+- **Type safe** - Strongly typed bindings prevent errors  
+- **Extensible** - Add custom models through JSON configuration  
+- **NumPy integration** - Seamless array operations
 
-## Installation
+## Quick start
 
-### Prerequisites
+### Installation
 
-- **C++ compiler** with C++20 support (GCC 10+, Clang 10+)
-- **Python 3.7+** with development headers
-- **pybind11** (automatically installed during build)
-- **Neun library** installed system-wide
-
-### Building from Source
-
-1. **Clone and build the Python bindings**:
 ```bash
-git clone git@github.com/GNB-UAM/neun_py
+pip install neun-py
+```
+
+### From source
+
+```bash
+git clone https://github.com/GNB-UAM/neun_py.git
 cd neun_py
-# Recommended: use Makefile
-make            # generates code (if needed) and installs in editable mode
-
-# Or explicitly
-make codegen    # force-regenerate src/pybinds.cpp
-make develop    # pip install -e .
+make
 ```
 
-3. **Optional dependencies for examples**:
-```bash
-pip install neun_py[examples]  # Includes matplotlib and numpy
-```
-
-### Make targets
-
-```bash
-make              # Default: codegen (if needed) + install editable
-make codegen      # Force regenerate src/pybinds.cpp
-make develop      # Install editable (-e .)
-make test         # Import module and print available types
-make sdist        # Build a source distribution
-make wheel        # Build a wheel (compiles extension)
-make dist         # Build both sdist and wheel
-make clean        # Remove build/ dist/ *.egg-info __pycache__ and generated src/pybinds.cpp
-```
-
-The Makefile automatically:
-- Regenerates C++ bindings when models.json or generator changes
-- Installs in editable mode for fast iteration
-- Provides clean/test/dist helpers
-
-## Usage
-
-### Basic Simulation
+### First simulation
 
 ```python
 import neun_py
 import matplotlib.pyplot as plt
 
-# Create a Hodgkin-Huxley neuron
-args = neun_py_core.HHDoubleConstructorArgs()
-neuron = neun_py_core.HHDoubleRK4(args)
+# Create Hodgkin-Huxley neuron
+args = neun_py.HHDoubleConstructorArgs()
+neuron = neun_py.HHDoubleRK4(args)
 
 # Set parameters
-neuron.set_param(neun_py_core.HHDoubleParameter.cm, 1e-3)
-neuron.set_param(neun_py_core.HHDoubleParameter.gna, 120e-3)
+neuron.set_param(neun_py.HHDoubleParameter.gna, 120 * 7.854e-3)
+neuron.set_param(neun_py.HHDoubleParameter.gk, 36 * 7.854e-3)
 
-# Set initial conditions
-neuron.set_var(neun_py_core.HHDoubleVariable.v, -80.0)
+# Initialize
+neuron.set(neun_py.HHDoubleVariable.v, -65)
 
 # Simulate
 times, voltages = [], []
-for i in range(10000):
+for i in range(100000):
+    neuron.add_synaptic_input(0.1)
     neuron.step(0.001)
-    times.append(i * 0.001)
-    voltages.append(neuron.get_var(neun_py_core.HHDoubleVariable.v))
+    if i % 100 == 0:
+        times.append(i * 0.001)
+        voltages.append(neuron.get(neun_py.HHDoubleVariable.v))
 
-# Plot
 plt.plot(times, voltages)
-plt.show()
+plt.xlabel('Time (ms)')
+plt.ylabel('Voltage (mV)')
+plt.savefig('spike.pdf')
 ```
 
-### Available Models and Types
+## Documentation
 
-The bindings generate classes for all combinations of:
-- **Models**: `HH` (Hodgkin-Huxley), `HR` (Hindmarsh-Rose), etc.
-- **Precisions**: `Float`, `Double`  
-- **Integrators**: `RK4`, `RK6`
+**[Full Documentation](https://gnb-uam.github.io/neun_py/)** - Complete guides and API reference
 
-Examples: `HHDoubleRK4`, `HRFloatRK6`, etc.
+**Quick Links:**
+- [Installation Guide](https://gnb-uam.github.io/neun_py/getting-started/installation/)
+- [Quick Start Tutorial](https://gnb-uam.github.io/neun_py/getting-started/quickstart/)
+- [User Guide](https://gnb-uam.github.io/neun_py/guide/basic-usage/)
+- [API Reference](https://gnb-uam.github.io/neun_py/api/core/)
+- [Adding Models](https://gnb-uam.github.io/neun_py/guide/adding-models/)
 
-### Synaptic Coupling
+## Examples
 
-```python
-# Create two neurons
-h1 = neun_py_core.HHDoubleRK4(args)
-h2 = neun_py_core.HHDoubleRK4(args)
+See the [`examples/`](examples/) directory:
 
-# Create electrical synapse
-synapse = neun_py_core.ESynHHHHDoubleRK4(
-    h1, neun_py_core.HHDoubleVariable.v,
-    h2, neun_py_core.HHDoubleVariable.v,
-    -0.002, -0.002  # Conductances
-)
+- [`basic.py`](examples/basic.py) - Single neuron simulation
+- [`synapsis.py`](examples/synapsis.py) - Coupled neurons with electrical synapse
 
-# Access synapse variables
-current = synapse.get(neun_py_core.ESynDoubleVariable.i1)
-conductance = synapse.get_param(neun_py_core.ESynDoubleParameter.g1)
+Run with:
+```bash
+python examples/basic.py --plot output.pdf
+python examples/synapsis.py --plot coupled.pdf
 ```
 
-## Adding New Models
+## Available models
 
-### 1. Update models.json
+| Model | Short Name | Description |
+|-------|------------|-------------|
+| **Hodgkin-Huxley** | `HH` | Classic conductance-based model |
+| **Hindmarsh-Rose** | `HR` | Simplified bursting model |
 
-Add your model to the configuration file:
+Each model supports:
+- **Precisions:** `Float`, `Double`
+- **Integrators:** `RK4` (4th order), `RK6` (6th order)
 
-```json
-{
-  "neurons": {
-    "MyCustomModel": {
-      "short_name": "MCM",
-      "header": "MyCustomModel.h",
-      "description": "Description of my custom model",
-      "variables": {
-        "v": "Membrane potential (mV)",
-        "n": "Gating variable"
-      },
-      "parameters": {
-        "g": "Conductance (mS/cm²)",
-        "tau": "Time constant (ms)"
-      }
-    }
-  }
-}
-```
+Example class names: `HHDoubleRK4`, `HRFloatRK6`
 
-### 2. Implement C++ Model
+## Development
 
-Create `MyCustomModel.h` following Neun conventions:
-
-```cpp
-template<typename Precision>
-class MyCustomModel {
-public:
-    enum variable { v, n, n_variables };
-    enum parameter { g, tau, n_parameters };
-    
-    // ... implementation details
-};
-```
-
-### 3. Regenerate and Build
+### Build system
 
 ```bash
-make codegen && make
+make              # Build and install in development mode
+make clean        # Remove build artifacts
+make test         # Run tests
+make dist         # Build distributions
 ```
 
-The new model will be automatically available as:
-- `MCMFloatRK4`, `MCMDoubleRK4`, etc.
-- `MCMFloatVariable.v`, `MCMDoubleParameter.g`, etc.
+### Adding models
 
-## Project Structure
+1. Create C++ header in `include/neun/models/`
+2. Add entry to `models.json`
+3. Rebuild with `make clean && make`
 
-```
-neun_py/
-├── models.json             # Model configuration file
-├── generate_pybinds.py     # Automatic code generator
-├── Makefile                # Build orchestration (codegen, install, test, clean)
-├── setup.py                # Python packaging
-├── src/                    # Generated C++ code
-│   └── pybinds.cpp        # Auto-generated bindings
-└── examples/               # Usage examples
-  ├── basic.py           # Single neuron simulation
-  ├── synapsis.py        # Coupled neurons
-  └── test_examples.py   # Test suite
-```
-
-## Build System
-
-The build system uses a multi-stage approach:
-
-1. **Configuration**: `models.json` defines available models, integrators, and precision types
-2. **Code Generation**: `generate_pybinds.py` creates C++ pybind11 code from the JSON configuration
-3. **Compilation**: `setup.py` compiles the generated C++ code into a Python module
-4. **Installation**: Module is installed in development mode for easy testing
-
-### Smart Regeneration
-
-The build script only regenerates C++ code when needed:
-- When `models.json` is newer than `src/pybinds.cpp`
-- When `generate_pybinds.py` is modified
-- When forced with `--force` flag
-
-This saves significant compilation time during development.
-
-## Installation Options
-
-### Development Installation
-```bash
-git clone [repository]
-cd neun_py
-make
-```
-Installs in editable mode with automatic path detection.
-
-### Production Installation  
-```bash
-pip install neun-py                    # Core library only
-pip install neun-py[examples]          # With matplotlib/numpy
-pip install neun-py[full]              # All optional dependencies
-```
-
-### Environment Variables
-If automatic detection fails, use:
-```bash
-export NEUN_INCLUDE_DIR=/path/to/neun/include
-make
-```
-
-## API Reference
-
-### Available Functions
-```python
-# Get available types
-neurons = neun_py_core.get_available_neurons()
-synapses = neun_py_core.get_available_synapses()
-
-# Get model information  
-info = neun_py_core.get_model_info("HH")
-```
-
-### Neuron Interface
-```python
-# Creation
-args = neun_py_core.HHDoubleConstructorArgs()
-neuron = neun_py_core.HHDoubleRK4(args)
-
-# Variables and parameters
-neuron.set_var(neun_py_core.HHDoubleVariable.v, value)
-neuron.set_param(neun_py_core.HHDoubleParameter.cm, value)
-voltage = neuron.get_var(neun_py_core.HHDoubleVariable.v)
-
-# Simulation
-neuron.add_synaptic_input(current)
-neuron.step(dt)
-```
-
-### Synapse Interface  
-```python
-# Electrical synapses
-synapse.get(neun_py_core.ESynDoubleVariable.i1)
-synapse.set_param(neun_py_core.ESynDoubleParameter.g1, value)
-synapse.step(dt)
-```
-
-## Architecture
-
-The project uses **metaprogramming** to automatically generate Python bindings:
-
-1. **`models.json`** - Configuration defining available models
-2. **`generate_pybinds.py`** - Code generator script  
-3. **`Makefile`** - Smart build orchestration
-4. **`setup.py`** - Python packaging
-
-This approach ensures:
-- **Type safety** - Enums prevent variable/parameter mistakes
-- **Maintainability** - Single source of truth in JSON
-- **Scalability** - Easy to add new models without manual coding
-- **Consistency** - Automatic C++/Python interface alignment
-
-## Troubleshooting
-
-**Import Error**: Ensure Neun is installed system-wide and build completed successfully
-
-**Compilation Error**: Check that your C++ compiler supports C++20
-
-**Missing Synapses**: Verify `generate_synaptic_pairs: true` in models.json
-
-**Path Issues**: Use `NEUN_INCLUDE_DIR` environment variable if headers aren't found automatically
+See [Adding Models Guide](https://gnb-uam.github.io/neun_py/guide/adding-models/) for details.
 
 ## Contributing
 
-1. Add your model to `models.json`
-2. Implement the C++ model following Neun conventions
-3. Test with `make codegen && make`
-4. Submit pull request with both JSON and header files
+Contributions welcome! See [Contributing Guide](https://gnb-uam.github.io/neun_py/development/contributing/).
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests
+5. Submit a pull request
+
+## License
+
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+
+- ✅ Free to use and modify
+- ✅ Open source required for derivatives
+- ✅ Network use requires source availability
+
+See [LICENSE](LICENSE) for full text.
+
+## Citation
+
+If you use this software in your research, please cite:
+
+```bibtex
+@software{lareo2025neun,
+  title = {Neun},
+  author = {Angel Lareo},
+  year = {2025},
+  url = {https://github.com/GNB-UAM/Neun}
+}
+```
+
+## Links
+
+- **Documentation:** https://gnb-uam.github.io/neun_py/
+- **Neun library:** https://github.com/GNB-UAM/neun
+- **Source code:** https://github.com/GNB-UAM/neun_py
+- **Issue tracker:** https://github.com/GNB-UAM/neun_py/issues
+
+---
+
+Made with ❤️ by [Angel Lareo](https://github.com/angellareo)

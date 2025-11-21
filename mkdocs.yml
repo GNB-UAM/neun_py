@@ -1,0 +1,81 @@
+site_name: Neun Python Bindings
+site_description: Python bindings for the Neun neural simulation library
+site_author: Angel Lareo
+site_url: https://gnb-uam.github.io/neun_py
+
+repo_name: GNB-UAM/neun_py
+repo_url: https://github.com/GNB-UAM/neun_py
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - Building from Source: getting-started/building.md
+  - User Guide:
+    - Basic Usage: guide/basic-usage.md
+    - Neuron Models: guide/models.md
+    - Synaptic Coupling: guide/synapses.md
+    - Adding Models: guide/adding-models.md
+  - API Reference:
+    - Core API: api/core.md
+    - Neurons: api/neurons.md
+    - Synapses: api/synapses.md
+  - Development:
+    - Architecture: development/architecture.md
+    - Contributing: development/contributing.md
+  - License: license.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/GNB-UAM/neun_py

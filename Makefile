@@ -55,6 +55,13 @@ try:\n import neun_py; print('\u2713 Module imported successfully');\
  print('Available synapses:', len(s) if hasattr(s, '__len__') else 'unknown')\
 except Exception as e:\n print('Import/test failed:', e); sys.exit(1)"
 
+# Serve documentation locally
+.PHONY: serve
+serve:
+	@echo "[docs] Starting MkDocs development server"
+	@command -v mkdocs >/dev/null 2>&1 || { echo "Error: mkdocs not found. Install with: pip install mkdocs-material"; exit 1; }
+	mkdocs serve
+
 # Clean generated and build artifacts
 .PHONY: clean
 clean:

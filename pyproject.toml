@@ -6,10 +6,10 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
-# Project metadata
+# Project metadata (PEP 621)
 [project]
+name = "neun_py"
 dynamic = [
-    "name",
     "version",
     "description",
     "readme",
@@ -20,15 +20,18 @@ license = { file = "LICENSE" }
 classifiers = [
     "License :: OSI Approved :: GNU Affero General Public License v3",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: C++",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
 ]
 requires-python = ">=3.7"
-dependencies = []
 
-[project.urls]
-Homepage = "https://github.com/GNB-UAM/neun_py"
-Repository = "https://github.com/GNB-UAM/neun_py"
-Documentation = "https://github.com/GNB-UAM/neun_py#readme"
-
-[tool.setuptools.packages.find]
-where = ["src"]
+[project.optional-dependencies]
+examples = ["matplotlib>=3.0.0"]
+full = ["matplotlib>=3.0.0"]
