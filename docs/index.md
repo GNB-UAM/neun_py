@@ -1,13 +1,10 @@
 # Neun Python Bindings
 
-<div align="center">
-
 **High-performance Python bindings for neural simulation**
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 
-</div>
 
 ## Overview
 
