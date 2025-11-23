@@ -20,7 +20,7 @@ Python bindings for the [Neun](https://github.com/GNB-UAM/neun) neural simulatio
 ### Installation
 
 ```bash
-pip install neun-py
+pip install neun_py
 ```
 
 ### From source
@@ -93,6 +93,7 @@ python examples/synapsis.py --plot coupled.pdf
 |-------|------------|-------------|
 | **Hodgkin-Huxley** | `HH` | Classic conductance-based model |
 | **Hindmarsh-Rose** | `HR` | Simplified bursting model |
+| **Izhikevich**     | `Iz` | simplified model of neuronal activity |
 
 Each model supports:
 - **Precisions:** `Float`, `Double`

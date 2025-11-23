@@ -34,6 +34,21 @@
         "mu": "Time scale parameter",
         "S": "Scaling parameter"
       }
+    },
+    "IzhikevichModel": {
+      "short_name": "Iz",
+      "description": "Izhikevich neuron model - simplified model of neuronal activity",
+      "header": "IzhikevichModel.h",
+      "variables": {
+        "v": "Membrane potential variable",
+        "u": "Recovery variable"
+      },
+      "parameters": {
+        "a": "Time scale of the recovery variable",
+        "b": "Sensitivity of the recovery variable",
+        "c": "After-spike reset value of the membrane potential",
+        "d": "After-spike reset of the recovery variable"
+      }
     }
   },
   "synapses": {
