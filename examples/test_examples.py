@@ -54,6 +54,86 @@ def test_basic_example():
         print(f"✗ Basic example failed: {e}")
         return False
 
+def test_izhikevich_example():
+    """Test the Izhikevich neuron example"""
+    print("\n=== Testing Izhikevich Neuron Example ===")
+    
+    try:
+        # Create constructor arguments
+        args = neun_py.IzDoubleConstructorArgs()
+        
+        # Create neuron
+        neuron = neun_py.IzDoubleRK4(args)
+        print("✓ Izhikevich neuron created successfully")
+        
+        # Set parameters for regular spiking
+        neuron.set_param(neun_py.IzDoubleParameter.a, 0.02)
+        neuron.set_param(neun_py.IzDoubleParameter.b, 0.2)
+        neuron.set_param(neun_py.IzDoubleParameter.c, -65.0)
+        neuron.set_param(neun_py.IzDoubleParameter.d, 8.0)
+        print("✓ Parameters set successfully")
+        
+        # Set initial conditions
+        neuron.set(neun_py.IzDoubleVariable.v, -65.0)
+        neuron.set(neun_py.IzDoubleVariable.u, -13.0)
+        print("✓ Initial conditions set successfully")
+        
+        # Test a few simulation steps
+        for i in range(10):
+            neuron.add_synaptic_input(10.0)
+            neuron.step(0.1)
+            v = neuron.get(neun_py.IzDoubleVariable.v)
+        
+        print(f"✓ Simulation steps completed, final voltage: {v:.3f} mV")
+        return True
+        
+    except Exception as e:
+        print(f"✗ Izhikevich example failed: {e}")
+        return False
+
+def test_hindmarsh_rose_example():
+    """Test the Hindmarsh-Rose neuron example"""
+    print("\n=== Testing Hindmarsh-Rose Neuron Example ===")
+    
+    try:
+        # Create constructor arguments
+        args = neun_py.HRDoubleConstructorArgs()
+        
+        # Create neuron
+        neuron = neun_py.HRDoubleRK4(args)
+        print("✓ Hindmarsh-Rose neuron created successfully")
+        
+        # Set parameters for bursting behavior
+        neuron.set_param(neun_py.HRDoubleParameter.a, 1.0)
+        neuron.set_param(neun_py.HRDoubleParameter.b, 3.0)
+        neuron.set_param(neun_py.HRDoubleParameter.c, 1.0)
+        neuron.set_param(neun_py.HRDoubleParameter.d, 5.0)
+        neuron.set_param(neun_py.HRDoubleParameter.e, 3.281)
+        neuron.set_param(neun_py.HRDoubleParameter.mu, 0.0029)
+        neuron.set_param(neun_py.HRDoubleParameter.S, 4.0)
+        neuron.set_param(neun_py.HRDoubleParameter.xr, -1.6)
+        neuron.set_param(neun_py.HRDoubleParameter.vh, 1.0)
+        print("✓ Parameters set successfully")
+        
+        # Set initial conditions
+        neuron.set(neun_py.HRDoubleVariable.x, -1.5)
+        neuron.set(neun_py.HRDoubleVariable.y, -10.0)
+        neuron.set(neun_py.HRDoubleVariable.z, 0.0)
+        print("✓ Initial conditions set successfully")
+        
+        # Test a few simulation steps
+        for i in range(10):
+            neuron.add_synaptic_input(0.0)
+            neuron.step(0.01)
+            x = neuron.get(neun_py.HRDoubleVariable.x)
+        
+        print(f"✓ Simulation steps completed, final x: {x:.3f}")
+        return True
+        
+    except Exception as e:
+        print(f"✗ Hindmarsh-Rose example failed: {e}")
+        return False
+
 def test_synapsis_example():
     """Test the synaptic coupling example"""
     print("\n=== Testing Synaptic Coupling Example ===")
@@ -141,6 +221,8 @@ def main():
     tests = [
         ("Model Information", test_model_info),
         ("Basic Neuron", test_basic_example),
+        ("Izhikevich Neuron", test_izhikevich_example),
+        ("Hindmarsh-Rose Neuron", test_hindmarsh_rose_example),
         ("Synaptic Coupling", test_synapsis_example),
     ]
     
