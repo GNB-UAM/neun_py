@@ -31,8 +31,14 @@
       },
       "parameters": {
         "e": "External current parameter",
-        "mu": "Time scale parameter",
-        "S": "Scaling parameter"
+        "mu": "Time scale parameter for slow variable",
+        "S": "Scaling parameter for slow variable",
+        "a": "Cubic term coefficient",
+        "b": "Quadratic term coefficient",
+        "c": "Constant in recovery equation",
+        "d": "Quadratic term in recovery equation",
+        "xr": "Rest value for slow variable",
+        "vh": "Scaling parameter for slow variable decay"
       }
     },
     "IzhikevichModel": {
