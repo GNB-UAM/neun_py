@@ -425,6 +425,11 @@ class PyBindsGenerator:
         lines.append('    register_synapse_enums<double>(m);')
         lines.append('    ')
         
+        # Track registered electrical synapses to avoid duplicates
+        lines.append('    // Track registered electrical synapses (they don\'t depend on integrator)')
+        lines.append('    std::set<std::string> registered_electrical;')
+        lines.append('    ')
+        
         # Generate limited combinations to avoid explosion
         self.syn_pairs_count = 0
         max_combinations = self.config['generation_config'].get('max_synaptic_combinations', MAX_SYNAPTIC_COMBINATIONS)
@@ -449,13 +454,18 @@ class PyBindsGenerator:
                                 lines.append('    // Additional combinations truncated to avoid code explosion')
                                 break
                     
-                            # Both neurons use the same precision and integrator
-                            pair_name = f"{synapse_short}{model1_short}{model2_short}{precision_suffix}{integrator_suffix}"
-                            
-                            # Use the appropriate registration function based on synapse type
+                            # Generate name based on synapse type
+                            # ElectricalSynapsis doesn't use integrator (passive connection)
+                            # DiffusionSynapsis does use integrator (has differential equations)
                             if synapse_name == "ElectricalSynapsis":
-                                lines.append(f'    register_electrical_synapse_pair<{precision}, {integrator_name}, {model1_name}, {model2_name}>(m, "{pair_name}");')
+                                pair_name = f"{synapse_short}{model1_short}{model2_short}{precision_suffix}"
+                                # Only register once per neuron pair + precision (not per integrator)
+                                lines.append(f'    if (registered_electrical.find("{pair_name}") == registered_electrical.end()) {{')
+                                lines.append(f'        register_electrical_synapse_pair<{precision}, {integrator_name}, {model1_name}, {model2_name}>(m, "{pair_name}");')
+                                lines.append(f'        registered_electrical.insert("{pair_name}");')
+                                lines.append(f'    }}')
                             elif synapse_name == "DiffusionSynapsis":
+                                pair_name = f"{synapse_short}{model1_short}{model2_short}{precision_suffix}{integrator_suffix}"
                                 lines.append(f'    register_diffusion_synapse_pair<{precision}, {integrator_name}, {model1_name}, {model2_name}>(m, "{pair_name}");')
                             
                             self.syn_pairs_count += 1
@@ -500,6 +510,11 @@ class PyBindsGenerator:
         # Funtion to get available SYNAPSE types
         lines.append('std::vector<std::string> get_available_synapses() {')
         lines.append('    std::vector<std::string> synapses;')
+        
+        # Track electrical synapse names to avoid duplicates (they don't have integrator suffix)
+        lines.append('    std::set<std::string> added_synapses;')
+        lines.append('    ')
+        
         for synapse_name, synapse_info in self.config['synapses'].items():
             synapse_short = synapse_info['short_name']
             for precision in self.config['precisions']:
@@ -510,8 +525,18 @@ class PyBindsGenerator:
                         model1_short = model1_info['short_name']
                         for model2_name, model2_info in self.config['neurons'].items():
                             model2_short = model2_info['short_name']
-                            pair_name = f"{synapse_short}{model1_short}{model2_short}{precision_suffix}{integrator_suffix}"
-                            lines.append(f'    synapses.push_back("{pair_name}");')
+                            
+                            # ElectricalSynapsis doesn't include integrator in name
+                            if synapse_name == "ElectricalSynapsis":
+                                pair_name = f"{synapse_short}{model1_short}{model2_short}{precision_suffix}"
+                                lines.append(f'    if (added_synapses.find("{pair_name}") == added_synapses.end()) {{')
+                                lines.append(f'        synapses.push_back("{pair_name}");')
+                                lines.append(f'        added_synapses.insert("{pair_name}");')
+                                lines.append(f'    }}')
+                            else:
+                                # DiffusionSynapsis includes integrator suffix
+                                pair_name = f"{synapse_short}{model1_short}{model2_short}{precision_suffix}{integrator_suffix}"
+                                lines.append(f'    synapses.push_back("{pair_name}");')
         lines.append('    return synapses;')
         lines.append('}')
         lines.append('')

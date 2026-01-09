@@ -66,7 +66,8 @@ Examples:
     
     # Create electrical synapse between the neurons
     # Parameters: neuron1, variable1, neuron2, variable2, conductance1, conductance2
-    s1 = neun_py.ESynHHHHDoubleRK4(
+    # Note: Electrical synapses don't use integrators (passive connections)
+    s1 = neun_py.ESynHHHHDouble(
         h1, neun_py.HHDoubleVariable.v,
         h2, neun_py.HHDoubleVariable.v,
         -0.002, -0.002
