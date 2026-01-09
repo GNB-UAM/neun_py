@@ -2,21 +2,34 @@
 
 Complete reference for synapse types and their usage in Neun Python.
 
+## Overview
+
+Neun provides two types of synapses that model different biological coupling mechanisms:
+
+- **Electrical synapses (Gap Junctions)**: Direct electrical connections through gap junctions. These are passive connections that allow bidirectional current flow proportional to the voltage difference. They don't require numerical integration since they have no internal dynamics.
+
+- **Diffusion synapses (Chemical Synapses)**: Chemical synaptic connections with neurotransmitter dynamics. These have internal differential equations modeling neurotransmitter release and binding, requiring numerical integration (RungeKutta4 or RungeKutta6).
+
 ## Electrical Synapse
+
+Electrical synapses model gap junction connections - direct ion channels between neurons that allow instantaneous bidirectional current flow. The synaptic current is simply proportional to the voltage difference: `I = g × (V₁ - V₂)`.
 
 ### Class Names
 
-Pattern: `ESyn{Neuron1}{Neuron2}{Precision}{Integrator}`
+Pattern: `ESyn{Neuron1}{Neuron2}{Precision}`
+
+**Note:** Electrical synapses don't include an integrator suffix because they have no internal dynamics requiring numerical integration.
 
 **Common combinations:**
-- `neun_py.ESynHHHHDoubleRK4` - HH to HH
-- `neun_py.ESynHRHRDoubleRK4` - HR to HR
-- `neun_py.ESynHHHRDoubleRK4` - HH to HR
+- `neun_py.ESynHHHHDouble` - HH to HH (double precision)
+- `neun_py.ESynHRHRDouble` - HR to HR (double precision)
+- `neun_py.ESynHHHRDouble` - HH to HR (double precision)
+- `neun_py.ESynHHHHFloat` - HH to HH (single precision)
 
 ### Constructor
 
 ```python
-synapse = neun_py.ESynHHHHDoubleRK4(
+synapse = neun_py.ESynHHHHDouble(
     neuron1,           # First neuron
     variable1,         # Variable to couple from neuron1
     neuron2,           # Second neuron
@@ -55,8 +68,8 @@ for n in [n1, n2]:
 n1.set(neun_py.HHDoubleVariable.v, -75)
 n2.set(neun_py.HHDoubleVariable.v, -65)
 
-# Create electrical synapse
-syn = neun_py.ESynHHHHDoubleRK4(
+# Create electrical synapse (no integrator needed - passive connection)
+syn = neun_py.ESynHHHHDouble(
     n1, neun_py.HHDoubleVariable.v,
     n2, neun_py.HHDoubleVariable.v,
     -0.002,  # Conductance n1 → n2
@@ -123,7 +136,7 @@ while time < duration:
 
 ```python
 # Unidirectional: n1 → n2
-syn = neun_py.ESynHHHHDoubleRK4(
+syn = neun_py.ESynHHHHDouble(
     n1, neun_py.HHDoubleVariable.v,
     n2, neun_py.HHDoubleVariable.v,
     -0.002,  # n1 influences n2
@@ -131,7 +144,7 @@ syn = neun_py.ESynHHHHDoubleRK4(
 )
 
 # Asymmetric bidirectional
-syn = neun_py.ESynHHHHDoubleRK4(
+syn = neun_py.ESynHHHHDouble(
     n1, neun_py.HHDoubleVariable.v,
     n2, neun_py.HHDoubleVariable.v,
     -0.003,  # Stronger n1 → n2
@@ -141,27 +154,32 @@ syn = neun_py.ESynHHHHDoubleRK4(
 
 ## Diffusion Synapse
 
+Diffusion synapses model chemical synaptic transmission with neurotransmitter dynamics based on the Destexhe et al. (1994) model. They include differential equations for neurotransmitter release (r) and synaptic current, requiring numerical integration.
+
 ### Class Names
 
 Pattern: `DSyn{Neuron1}{Neuron2}{Precision}{Integrator}`
 
+**Note:** Diffusion synapses require an integrator suffix (RK4 or RK6) because they have internal differential equations for neurotransmitter dynamics.
+
 **Common combinations:**
-- `neun_py.DSynHHHHDoubleRK4`
-- `neun_py.DSynHRHRDoubleRK4`
-- `neun_py.DSynHHHRDoubleRK4`
+- `neun_py.DSynHHHHDoubleRK4` - HH to HH with RungeKutta4
+- `neun_py.DSynHRHRDoubleRK6` - HR to HR with RungeKutta6
+- `neun_py.DSynHHHRDoubleRK4` - HH to HR with RungeKutta4
+- `neun_py.DSynHHHHFloatRK4` - HH to HH (single precision) with RungeKutta4
 
 ### Constructor
 
 ```python
 synapse = neun_py.DSynHHHHDoubleRK4(
-    neuron1,
-    variable1,
-    neuron2,
-    variable2
+    neuron1,           # Presynaptic neuron
+    variable1,         # Presynaptic variable (typically voltage)
+    neuron2,           # Postsynaptic neuron
+    variable2          # Postsynaptic variable (typically voltage)
 )
 ```
 
-**Note:** Diffusion synapses have internal state and dynamics.
+**Note:** Diffusion synapses have internal state variables (neurotransmitter concentration `r` and synaptic current `i`) with differential equations requiring numerical integration.
 
 ### Example
 
@@ -182,13 +200,72 @@ syn = neun_py.DSynHHHHDoubleRK4(
 )
 ```
 
-### Methods
+### Parameters
 
-Same as electrical synapse:
+Diffusion synapses have several biophysical parameters controlling neurotransmitter dynamics:
 
 ```python
-syn.step(dt)
+import neun_py
+
+# Create synapse
+syn = neun_py.DSynHHHHDoubleRK4(
+    n1, neun_py.HHDoubleVariable.v,
+    n2, neun_py.HHDoubleVariable.v
+)
+
+# Set parameters
+syn.set_param(neun_py.DSynDoubleParameter.alpha, 5.0)           # Binding rate (ms⁻¹mM⁻¹)
+syn.set_param(neun_py.DSynDoubleParameter.beta, 0.18)           # Unbinding rate (ms⁻¹)
+syn.set_param(neun_py.DSynDoubleParameter.threshold, -20.0)     # Activation threshold (mV)
+syn.set_param(neun_py.DSynDoubleParameter.esyn, -75.0)          # Reversal potential (mV)
+syn.set_param(neun_py.DSynDoubleParameter.gsyn, 0.015)          # Max conductance (mS/cm²)
+syn.set_param(neun_py.DSynDoubleParameter.T, 1.0)               # Max neurotransmitter (mM)
+syn.set_param(neun_py.DSynDoubleParameter.max_release_time, 1.0) # Release duration (ms)
+```
+
+**Parameter descriptions:**
+- `alpha`: Neurotransmitter binding rate
+- `beta`: Neurotransmitter unbinding rate
+- `threshold`: Presynaptic voltage threshold for release
+- `esyn`: Synaptic reversal potential (negative for inhibitory, positive for excitatory)
+- `gsyn`: Maximum synaptic conductance
+- `T`: Maximum neurotransmitter concentration
+- `max_release_time`: Duration of neurotransmitter release after spike
+
+### Methods
+
+#### step(dt)
+
+Advances the synapse dynamics by one time step, integrating the neurotransmitter equations.
+
+```python
+syn.step(0.001)  # dt in milliseconds
+```
+
+#### get_synaptic_current()
+
+Returns the current synaptic current.
+
+```python
 current = syn.get_synaptic_current()
+```
+
+#### get(variable)
+
+Get internal state variables:
+
+```python
+r = syn.get(neun_py.DSynDoubleVariable.r)  # Neurotransmitter concentration
+i = syn.get(neun_py.DSynDoubleVariable.i)  # Synaptic current
+```
+
+#### set(variable, value)
+
+Set internal state variables:
+
+```python
+syn.set(neun_py.DSynDoubleVariable.r, 0.0)  # Reset neurotransmitter
+syn.set(neun_py.DSynDoubleVariable.i, 0.0)  # Reset current
 ```
 
 ### Simulation Loop
@@ -226,13 +303,13 @@ n1 = create_hh_neuron(-70)
 n2 = create_hh_neuron(-65)
 n3 = create_hh_neuron(-60)
 
-s12 = neun_py.ESynHHHHDoubleRK4(
+s12 = neun_py.ESynHHHHDouble(
     n1, neun_py.HHDoubleVariable.v,
     n2, neun_py.HHDoubleVariable.v,
     -0.002, -0.002
 )
 
-s23 = neun_py.ESynHHHHDoubleRK4(
+s23 = neun_py.ESynHHHHDouble(
     n2, neun_py.HHDoubleVariable.v,
     n3, neun_py.HHDoubleVariable.v,
     -0.002, -0.002
@@ -265,19 +342,19 @@ n1 = create_hh_neuron(-70)
 n2 = create_hh_neuron(-65)
 n3 = create_hh_neuron(-60)
 
-s12 = neun_py.ESynHHHHDoubleRK4(
+s12 = neun_py.ESynHHHHDouble(
     n1, neun_py.HHDoubleVariable.v,
     n2, neun_py.HHDoubleVariable.v,
     -0.002, -0.002
 )
 
-s23 = neun_py.ESynHHHHDoubleRK4(
+s23 = neun_py.ESynHHHHDouble(
     n2, neun_py.HHDoubleVariable.v,
     n3, neun_py.HHDoubleVariable.v,
     -0.002, -0.002
 )
 
-s31 = neun_py.ESynHHHHDoubleRK4(
+s31 = neun_py.ESynHHHHDouble(
     n3, neun_py.HHDoubleVariable.v,
     n1, neun_py.HHDoubleVariable.v,
     -0.002, -0.002
@@ -309,7 +386,7 @@ neurons = [create_hh_neuron(-65 + i*5) for i in range(n_neurons)]
 synapses = []
 for i in range(n_neurons):
     for j in range(i+1, n_neurons):
-        syn = neun_py.ESynHHHHDoubleRK4(
+        syn = neun_py.ESynHHHHDouble(
             neurons[i], neun_py.HHDoubleVariable.v,
             neurons[j], neun_py.HHDoubleVariable.v,
             -0.001, -0.001
@@ -348,11 +425,17 @@ hr_neuron = neun_py.HRDoubleRK4(hr_args)
 
 # ... set parameters ...
 
-# Connect different types
-syn = neun_py.ESynHHHRDoubleRK4(
+# Connect different types with electrical synapse
+syn_elec = neun_py.ESynHHHRDouble(
     hh_neuron, neun_py.HHDoubleVariable.v,
     hr_neuron, neun_py.HRDoubleVariable.x,
     -0.002, -0.002
+)
+
+# Or use chemical synapse (requires integrator)
+syn_chem = neun_py.DSynHHHRDoubleRK4(
+    hh_neuron, neun_py.HHDoubleVariable.v,
+    hr_neuron, neun_py.HRDoubleVariable.x
 )
 ```
 
@@ -436,7 +519,7 @@ Start with weak coupling and increase:
 conductances = [0.0001, 0.0005, 0.001, 0.005, 0.01]
 
 for g in conductances:
-    syn = neun_py.ESynHHHHDoubleRK4(
+    syn = neun_py.ESynHHHHDouble(
         n1, neun_py.HHDoubleVariable.v,
         n2, neun_py.HHDoubleVariable.v,
         -g, -g
