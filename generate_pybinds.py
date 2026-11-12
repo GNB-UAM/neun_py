@@ -22,7 +22,7 @@ class PyBindsGenerator:
         
     def _load_models(self) -> Dict[str, Any]:
         """Load models configuration from JSON file."""
-        with open(self.models_file, 'r') as f:
+        with open(self.models_file, 'r', encoding='utf-8') as f:
             return json.load(f)
     
     def _get_precision_suffix(self, precision: str) -> str:
@@ -632,7 +632,7 @@ class PyBindsGenerator:
         full_code = '\n'.join(sections)
         
         # Write to output file
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             f.write(full_code)
         
         print(f"Generated {len(full_code.splitlines())} lines of C++ code in {output_file}")

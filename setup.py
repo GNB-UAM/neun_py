@@ -8,7 +8,7 @@ from setuptools.extension import Extension
 
 # Platform flag used by compile arg helper
 is_windows = sys.platform.startswith('win')
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 
 def get_neun_headers():
     """Return a list of all Neun header files under include/neun/**.
@@ -41,7 +41,7 @@ def get_include_dirs():
 def get_compile_args():
     """Return platform-specific extra compile arguments."""
     if is_windows:
-        return ["/O2", "/std:c++20"]
+        return ["/O2", "/std:c++20", "/utf-8"]
     return ["-O3", "-std=c++20", "-fvisibility=hidden"]
 
 # Build include directories dynamically from header tree
@@ -114,7 +114,7 @@ setup(
     author="Angel Lareo",
     author_email="angel.lareo@uam.es",
     description="Python bindings for Neun neural simulation library",
-    long_description=open("README.md").read() if os.path.exists("README.md") else "",
+    long_description=open("README.md", encoding="utf-8").read() if os.path.exists("README.md") else "",
     long_description_content_type="text/markdown",
     license_files=["LICENSE", "include/neun/Copyright"],
     ext_modules=ext_modules,
