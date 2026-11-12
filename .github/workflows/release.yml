@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build source distribution
+        run: |
+          python -m pip install build packaging
+          python -m build --sdist
+      - name: Check release version
+        if: github.event_name == 'push'
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python -c 'import glob, os; from packaging.utils import parse_sdist_filename; files = glob.glob("dist/*.tar.gz"); assert len(files) == 1; version = str(parse_sdist_filename(os.path.basename(files[0]))[1]); assert os.environ["RELEASE_TAG"] == "v" + version, f"Tag must be v{version}"'
+      - name: Build and test the source distribution
+        run: |
+          python -m pip wheel --no-deps dist/*.tar.gz --wheel-dir sdist-wheel
+          python -m pip install --no-deps sdist-wheel/*.whl
+          cd "$RUNNER_TEMP"
+          python -c 'import importlib.metadata, neun_py; assert neun_py.__version__ == importlib.metadata.version("neun_py"); assert neun_py.get_available_neurons(); assert neun_py.get_available_synapses()'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  wheels:
+    needs: sdist
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-2022, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and test wheels
+        uses: pypa/cibuildwheel@v2.23.3
+        env:
+          CIBW_BUILD: 'cp39-* cp310-* cp311-* cp312-* cp313-*'
+          CIBW_ARCHS_LINUX: x86_64
+          CIBW_ARCHS_WINDOWS: AMD64
+          CIBW_ARCHS_MACOS: x86_64
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_TEST_COMMAND: >-
+            python -c "import importlib.metadata, neun_py; assert neun_py.__version__ == importlib.metadata.version('neun_py'); assert neun_py.get_available_neurons(); assert neun_py.get_available_synapses(); assert neun_py.HHDoubleRK4(neun_py.HHDoubleConstructorArgs())"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+
+  release:
+    needs: [sdist, wheels]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes

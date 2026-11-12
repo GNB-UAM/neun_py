@@ -589,7 +589,7 @@ class PyBindsGenerator:
         lines.append('')
         lines.append('PYBIND11_MODULE(neun_py, m) {')
         lines.append('    m.doc() = "Neun Python Bindings - Neural Simulation Library";')
-        lines.append('    m.attr("__version__") = "0.4.0";')
+        lines.append('    m.attr("__version__") = VERSION_INFO;')
         lines.append('    ')
         lines.append('    // Register individual neurons')
         lines.append('    register_individual_neurons(m);')

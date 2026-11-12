@@ -19,9 +19,19 @@ Python bindings for the [Neun](https://github.com/GNB-UAM/neun) neural simulatio
 
 ### Installation
 
+Download the wheel matching your Python version and platform from the
+[GitHub releases](https://github.com/GNB-UAM/neun_py/releases) page, then install it:
+
 ```bash
-pip install neun_py
+python -m pip install /path/to/neun_py-<version>-<python>-<abi>-<platform>.whl
 ```
+
+Release wheels are built for CPython 3.9-3.13 on x86-64 Linux (manylinux 2.28),
+Windows, and macOS. A matching wheel contains the compiled extension and needs
+neither a compiler nor a separate Neun installation. On other platforms, the
+release source archive can be installed with `python -m pip install
+/path/to/neun_py-<version>.tar.gz`; this builds the extension and requires a
+C++20 compiler and Python development headers, but not a separate Neun install.
 
 ### From source
 
@@ -29,6 +39,14 @@ pip install neun_py
 git clone https://github.com/GNB-UAM/neun_py.git
 cd neun_py
 make
+```
+
+The source tree bundles the header-only Neun library under `include/neun`;
+the build generates the bindings from `models.json` and compiles them using
+those headers. The `examples` extra installs plotting dependencies:
+
+```bash
+python -m pip install -e '.[examples]'
 ```
 
 ### First simulation
@@ -102,6 +120,26 @@ Each model supports:
 Example class names: `HHDoubleRK4`, `HRFloatRK6`
 
 ## Development
+
+### Creating a release
+
+After pushing the workflow to GitHub, use **Actions > Release > Run workflow**
+to test its source and wheel builds without creating a release. The manual run
+does not check the tag or publish artifacts to a GitHub release.
+
+1. Update `VERSION` in `setup.py`, commit the change, and push it to GitHub.
+2. Tag that commit with the same version and push the tag:
+
+  ```bash
+  git tag v0.4.0
+  git push origin v0.4.0
+  ```
+
+  Replace `0.4.0` with the new version; tags must match `v` plus `VERSION`.
+3. The Release workflow builds an sdist and platform wheels, tests the wheels,
+  and creates a GitHub release with those files and generated notes. Check the
+  Actions run and the release page before sharing it. This does not publish to
+  PyPI.
 
 ### Build system
 

@@ -6,5 +6,5 @@ include generate_pybinds.py
 # Include top-level docs and config
 include README.md
 include pyproject.toml
-include CMakeLists.txt
 include LICENSE
+include include/neun/Copyright

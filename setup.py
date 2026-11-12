@@ -8,6 +8,7 @@ from setuptools.extension import Extension
 
 # Platform flag used by compile arg helper
 is_windows = sys.platform.startswith('win')
+VERSION = "0.4.0"
 
 def get_neun_headers():
     """Return a list of all Neun header files under include/neun/**.
@@ -23,12 +24,8 @@ def get_neun_headers():
     return headers
 
 def get_neun_include_dirs():
-    """Collect all unique include directories inside include/neun/** that contain headers.
-
-    This ensures the extension can #include <...> from any subdirectory without relying
-    on relative paths. The pybind11 include directory is appended separately.
-    """
-    neun_dir = os.path.join("include", "neun")
+    """Collect include directories from the bundled Neun headers."""
+    neun_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "include", "neun")
     include_dirs = set()
     for root, _, files in os.walk(neun_dir):
         if any(f.endswith((".h", ".hpp")) for f in files):
@@ -59,7 +56,7 @@ ext_modules = [
         ["src/pybinds.cpp"],  # generated before compilation
         include_dirs=include_dirs,
         extra_compile_args=get_compile_args(),
-        define_macros=[('VERSION_INFO', '"dev"')],
+        define_macros=[('VERSION_INFO', f'"{VERSION}"')],
         language='c++',
     ),
 ]
@@ -89,6 +86,8 @@ class build_ext_with_codegen(build_ext):
             raise RuntimeError(f"Code generation failed with exit code {e.returncode}") from e
 
     def build_extensions(self):
+        if not any(os.path.isfile(os.path.join(path, "NeuronBase.h")) for path in get_neun_include_dirs()):
+            raise RuntimeError("Bundled Neun headers not found under include/neun")
         # Ensure pybind11 includes are present at build time
         try:
             import pybind11  # type: ignore
@@ -111,12 +110,13 @@ class build_ext_with_codegen(build_ext):
 
 setup(
     name="neun_py",
-    version="0.4.0",
+    version=VERSION,
     author="Angel Lareo",
     author_email="angel.lareo@uam.es",
     description="Python bindings for Neun neural simulation library",
     long_description=open("README.md").read() if os.path.exists("README.md") else "",
     long_description_content_type="text/markdown",
+    license_files=["LICENSE", "include/neun/Copyright"],
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext_with_codegen},
     # Packages: For adding Python packages under a src/ layout
